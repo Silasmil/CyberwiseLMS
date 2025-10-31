@@ -1,6 +1,29 @@
-node_modules
-dist
+﻿# OS noise
+Thumbs.db
 .DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+
+# Replit noise
+.local/
+
+# Logs
+*.log
