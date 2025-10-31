@@ -18,6 +18,7 @@ export default function Apply() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [cvFile, setCvFile] = useState<File | null>(null);
 
   const form = useForm<InsertApplication>({
     resolver: zodResolver(insertApplicationSchema),
@@ -34,7 +35,29 @@ export default function Apply() {
 
   const applyMutation = useMutation({
     mutationFn: async (data: InsertApplication) => {
-      return await apiRequest("POST", "/api/applications", data);
+      const formData = new FormData();
+      
+      // Append all form fields
+      Object.entries(data).forEach(([key, value]) => {
+        formData.append(key, value as string);
+      });
+      
+      // Append CV file if present
+      if (cvFile) {
+        formData.append("cv", cvFile);
+      }
+
+      const response = await fetch("/api/applications", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to submit application");
+      }
+
+      return response.json();
     },
     onSuccess: () => {
       setSubmitted(true);
@@ -51,6 +74,23 @@ export default function Apply() {
       });
     },
   });
+
+  function handleFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "File Too Large",
+          description: "Please select a file smaller than 5MB",
+        });
+        event.target.value = "";
+        return;
+      }
+      setCvFile(file);
+    }
+  }
 
   function onSubmit(values: InsertApplication) {
     applyMutation.mutate(values);
@@ -228,26 +268,31 @@ export default function Apply() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="cvUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CV/Resume URL (Optional)</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="https://example.com/my-cv.pdf"
-                            {...field}
-                            data-testid="input-cv-url"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Link to your CV or LinkedIn profile (optional)
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <FormItem>
+                    <FormLabel>CV/Resume Upload (Optional)</FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        <Input
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          onChange={handleFileSelect}
+                          disabled={applyMutation.isPending}
+                          className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                          data-testid="input-cv-file"
+                        />
+                        {cvFile && (
+                          <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4" />
+                            {cvFile.name} selected
+                          </p>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Upload your CV/Resume in PDF or Word format (max 5MB)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
 
                   <div className="pt-4 space-y-4">
                     <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">

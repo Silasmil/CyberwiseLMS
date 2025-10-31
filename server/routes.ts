@@ -1,10 +1,14 @@
 import type { Express, Request, Response, NextFunction } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertApplicationSchema, insertUserSchema, insertCourseSchema, insertModuleSchema, insertLessonSchema, insertAssignmentSchema, insertSubmissionSchema, insertDiscussionPostSchema, insertDiscussionReplySchema, insertResourceSchema, insertAnnouncementSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import bcrypt from "bcryptjs";
 import session from "express-session";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 // Password validation regex
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -43,6 +47,35 @@ async function sendEmail(to: string, subject: string, body: string) {
   // In production, use SendGrid, AWS SES, or similar
 }
 
+// File upload configuration
+const uploadDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: uploadDir,
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+    },
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /pdf|doc|docx/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (extname && mimetype) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF and Word documents are allowed"));
+    }
+  },
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Session configuration
   app.use(
@@ -58,16 +91,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })
   );
 
+  // Serve uploaded files (admin only - for reviewing applicant CVs)
+  app.get("/uploads/:filename", requireAdmin, (req, res) => {
+    const filename = path.basename(req.params.filename); // Prevent path traversal
+    const filePath = path.join(uploadDir, filename);
+    
+    // Verify the resolved path is within uploadDir
+    const realPath = fs.realpathSync.native ? path.resolve(filePath) : filePath;
+    if (!realPath.startsWith(path.resolve(uploadDir))) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    if (fs.existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      res.status(404).json({ error: "File not found" });
+    }
+  });
+
   // ============= PUBLIC ROUTES =============
 
-  // Submit application
-  app.post("/api/applications", async (req, res) => {
+  // Submit application (with optional CV upload)
+  app.post("/api/applications", upload.single("cv"), async (req, res) => {
     try {
-      const data = insertApplicationSchema.parse(req.body);
+      // Add CV URL if file was uploaded
+      const applicationData = {
+        ...req.body,
+        cvUrl: req.file ? `/uploads/${req.file.filename}` : req.body.cvUrl || "",
+      };
+
+      const data = insertApplicationSchema.parse(applicationData);
 
       // Check for duplicate email
       const existing = await storage.getApplicationByEmail(data.email);
       if (existing) {
+        // Delete uploaded file if validation fails
+        if (req.file && fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
         return res.status(400).json({ error: "An application with this email already exists" });
       }
 
@@ -82,6 +143,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(application);
     } catch (error) {
+      // Delete uploaded file if validation fails
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      
       if (error instanceof ZodError) {
         return res.status(400).json({ error: "Invalid application data", details: error.errors });
       }
