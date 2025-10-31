@@ -1,0 +1,262 @@
+Prompt: Cyberwise Ethical Hacking Bootcamp LMS — Full Specification (Updated)
+
+Goal:
+Build a secure, responsive LMS for Cyberwise Ethical Hacking Bootcamp using React + Tailwind, with Firebase Auth, Firestore, Storage, and email functions. Host on Vercel or Netlify.
+
+This LMS is education-only; payments are handled externally. Students must be approved by admin before accessing content.
+
+The platform must comply with data protection regulations (e.g., GDPR/Kenya Data Protection Act) and ensure proper handling of personal student information.
+
+Primary Contact / Admin Info
+
+Admin Name: Milton Silas — Cisco Trainer / Cybersecurity Specialist
+
+Email: miltonsilas564@gmail.com
+
+WhatsApp / Phone: +254 713 121 435
+
+Key Requirements
+1. Home Page (Public)
+
+Hero section with title: Cyberwise Ethical Hacking Bootcamp
+
+CTA: Apply for Access → leads to Apply Form
+
+Course overview + short description
+
+Links to NetAcad:
+
+Ethical Hacker Course
+
+Lab Downloads
+
+Contact section: email + WhatsApp
+
+FAQ section: prerequisites, duration, certification
+
+Data privacy statement link and cookie consent
+
+2. Apply / Request Access
+
+Form fields: Full name, email, phone, location, experience level, reason for joining, optional CV upload
+
+Auto confirmation email on submission
+
+Admin dashboard notification of new application
+
+Collect and store personal data in compliance with data protection regulations
+
+3. Approval & Admission Numbers
+
+Admin approves students manually
+
+On approval:
+
+Assign systematic digital admission number: CYBERWISE001, CYBERWISE002, … increment automatically
+
+Generate first-time password: "Hacker@2025"
+
+Strong password rules enforced:
+
+Minimum 8 characters
+
+At least 1 uppercase, 1 lowercase, 1 number, 1 special character
+
+Email student their admission number + login instructions
+
+Login credentials:
+
+Username: Admission Number (e.g., CYBERWISE001)
+
+First-time password: "Hacker@2025"
+
+Users can change password after first login
+
+Only admin can reset passwords
+
+4. Registration / Login
+
+Login page: Admission number + password
+
+First-time login forces password change (enforces strong password rules)
+
+Forgotten password only resettable by admin
+
+Two-step verification optional (email-based)
+
+5. Student Dashboard
+
+Personalized dashboard after login
+
+Learning Stream layout (live feed of upcoming modules)
+
+“Next Module” card: module name, start date, short blurb
+
+Module Prelude card: video link or resource link admin added (appears before module unlock)
+
+“Active Module” card: quick links to lessons, assignments, quizzes, resources
+
+Calendar panel showing deadlines & live events
+
+Notifications: announcements, assignment deadlines, approvals
+
+Quick links: My Courses, Assignments, Resources, Discussions, Certificates, Support
+
+6. My Courses / Course Overview
+
+Course cards with:
+
+Image/banner
+
+Course name
+
+Category
+
+Progress bar (% complete)
+
+“Open Course” button → course page
+
+Filter and search functionality
+
+7. Module Pages
+
+Each module contains:
+
+Title, objectives, estimated time
+
+Module Prelude area (admin adds video or link before module unlocks)
+
+List of lessons (NetAcad links or embedded video)
+
+Assignments & quizzes
+
+“Start Module” button active on release date
+
+8. Assignments & Submissions
+
+Per-module assignments with due dates
+
+Upload form supports: pdf, docx, xlsx, pptx, jpg, png, zip
+
+Max file size: 100MB
+
+Submission metadata: timestamp, filename, type, status (Submitted, Graded, Resubmit)
+
+Instructor grading UI + feedback
+
+History retained for audit
+
+9. Resources & Labs
+
+Central repository page linking NetAcad resources + lab downloads
+
+Instructor can pin resources per module
+
+10. Discussions / Q&A
+
+Forum per course + per module
+
+Students can post questions, instructors respond
+
+11. Certificates
+
+Auto-generate completion certificates:
+
+Triggered when course progress > threshold (80%) + capstone completed
+
+PDF includes: student name, course name, completion date
+
+Instructor signature displayed in italicized, stylized font to look professional and fancy
+
+Certificates stored in Firestore or downloadable from student dashboard
+
+12. Admin / Instructor Panel
+
+Manage approvals, student accounts, module prelude content
+
+Schedule module release dates
+
+Bulk upload content
+
+Export CSV reports (grades, attendance)
+
+Push announcements to dashboard + email
+
+Toggle “Payment Verified” flag for students
+
+Design & UX
+
+Dark-modern theme, readable contrast, clean minimal layout
+
+Fonts: Inter or Poppins
+
+Distinct visual style for Module Prelude
+
+Fully mobile-responsive
+
+Security & Compliance
+
+HTTPS only
+
+Strong password enforcement
+
+Rate limits on uploads
+
+Virus scanning on file uploads
+
+Data protection compliant (GDPR/Kenya Data Protection Act)
+
+Privacy policy and T&Cs page
+
+Tech Stack
+
+Frontend: React + Tailwind CSS
+
+Backend: Firebase Auth + Firestore + Storage
+
+Email functions: Firebase Functions or SendGrid
+
+Hosting: Vercel / Netlify
+
+Integration & Links
+
+NetAcad course and lab resources
+
+Support: miltonsilas564@gmail.com
+, WhatsApp +254 713 121 435
+
+Payment site link (display-only)
+
+Notification / Email Templates
+
+Application received
+
+Application approved (includes admission number + first-time password)
+
+Application rejected
+
+Module released
+
+Assignment submitted / graded
+
+Password change confirmation
+
+Deliverables / Acceptance Criteria
+
+Home, Apply, Login, Dashboard, My Courses, Module pages, Assignments, Admin panel fully functional
+
+Approval workflow + systematic admission numbers working
+
+First-time password works, password change enforced, admin-only reset
+
+Module Prelude editable and visible before module start
+
+Assignment upload, grading, and feedback tested
+
+Certificates generated with italicized, stylized signature
+
+Live site deployed with SSL
+
+Data protection compliance verified
+
+This prompt now fully covers your LMS with approval workflow, admission numbers, password rules, module prelude, assignment uploads, and certificate styling.
