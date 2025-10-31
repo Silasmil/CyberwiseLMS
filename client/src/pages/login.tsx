@@ -44,17 +44,16 @@ export default function Login() {
       return await apiRequest("POST", "/api/auth/login", data);
     },
     onSuccess: (response: any) => {
-      if (response.requirePasswordChange) {
+      if (response.mustChangePassword) {
         setRequirePasswordChange(true);
-        setTempAuth({ token: response.token, user: response.user });
+        setTempAuth({ token: "session", user: response.user });
       } else {
-        setAuthToken(response.token);
         setCurrentUser(response.user);
         toast({
           title: "Login Successful",
           description: `Welcome back, ${response.user.fullName}!`,
         });
-        navigate(response.user.isAdmin ? "/admin" : "/dashboard");
+        navigate(response.user.role === "admin" ? "/admin" : "/dashboard");
       }
     },
     onError: (error: Error) => {
@@ -69,19 +68,16 @@ export default function Login() {
   const changePasswordMutation = useMutation({
     mutationFn: async (data: PasswordChangeRequest) => {
       if (!tempAuth) throw new Error("No authentication");
-      return await apiRequest("POST", "/api/auth/change-password", data, {
-        headers: { Authorization: `Bearer ${tempAuth.token}` },
-      });
+      return await apiRequest("POST", "/api/auth/change-password", data);
     },
     onSuccess: () => {
       if (tempAuth) {
-        setAuthToken(tempAuth.token);
         setCurrentUser(tempAuth.user);
         toast({
           title: "Password Changed",
           description: "Your password has been updated successfully.",
         });
-        navigate(tempAuth.user.isAdmin ? "/admin" : "/dashboard");
+        navigate(tempAuth.user.role === "admin" ? "/admin" : "/dashboard");
       }
     },
     onError: (error: Error) => {

@@ -1,40 +1,55 @@
-import { Student } from "@shared/schema";
-
-const AUTH_KEY = "cyberwise_auth";
+const AUTH_KEY = "cyberwise_session";
 const USER_KEY = "cyberwise_user";
 
+export interface AuthUser {
+  id: string;
+  admissionNumber: string;
+  fullName: string;
+  email: string;
+  role: "student" | "admin";
+  mustChangePassword?: boolean;
+}
+
+let cachedUser: AuthUser | null = null;
+
 export function getAuthToken(): string | null {
-  return localStorage.getItem(AUTH_KEY);
+  return sessionStorage.getItem(AUTH_KEY);
 }
 
 export function setAuthToken(token: string): void {
-  localStorage.setItem(AUTH_KEY, token);
+  sessionStorage.setItem(AUTH_KEY, token);
 }
 
 export function removeAuthToken(): void {
-  localStorage.removeItem(AUTH_KEY);
-  localStorage.removeItem(USER_KEY);
+  sessionStorage.removeItem(AUTH_KEY);
+  sessionStorage.removeItem(USER_KEY);
+  cachedUser = null;
 }
 
-export function getCurrentUser(): Student | null {
-  const userStr = localStorage.getItem(USER_KEY);
+export function getCurrentUser(): AuthUser | null {
+  if (cachedUser) return cachedUser;
+  
+  const userStr = sessionStorage.getItem(USER_KEY);
   if (!userStr) return null;
   try {
-    return JSON.parse(userStr);
+    cachedUser = JSON.parse(userStr);
+    return cachedUser;
   } catch {
     return null;
   }
 }
 
-export function setCurrentUser(user: Student): void {
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+export function setCurrentUser(user: AuthUser): void {
+  cachedUser = user;
+  sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+  sessionStorage.setItem(AUTH_KEY, "authenticated");
 }
 
 export function isAuthenticated(): boolean {
-  return !!getAuthToken();
+  return !!getAuthToken() && !!getCurrentUser();
 }
 
 export function isAdmin(): boolean {
   const user = getCurrentUser();
-  return user?.isAdmin === true;
+  return user?.role === "admin";
 }

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -6,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { StudentLayout } from "@/components/layout/student-layout";
 import { AdminLayout } from "@/components/layout/admin-layout";
-import { isAuthenticated, isAdmin } from "@/lib/auth";
+import { isAuthenticated, isAdmin, setCurrentUser, removeAuthToken } from "@/lib/auth";
 
 import Home from "@/pages/home";
 import Apply from "@/pages/apply";
@@ -87,6 +88,45 @@ function Router() {
 }
 
 export default function App() {
+  const [isHydrating, setIsHydrating] = useState(true);
+
+  useEffect(() => {
+    // Hydrate session from server on app load
+    async function hydrateSession() {
+      try {
+        const response = await fetch("/api/auth/me", {
+          credentials: "include",
+        });
+        
+        if (response.ok) {
+          const user = await response.json();
+          setCurrentUser(user);
+        } else {
+          // Session invalid, clear local state
+          removeAuthToken();
+        }
+      } catch (error) {
+        // Network error or server down, clear local state
+        removeAuthToken();
+      } finally {
+        setIsHydrating(false);
+      }
+    }
+
+    hydrateSession();
+  }, []);
+
+  if (isHydrating) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark">
